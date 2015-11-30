@@ -49,11 +49,11 @@ streamingResponse src status headers =
 
 -- | Stream strict 'ByteString's into a 'StreamingBody'
 streamingBody :: Stream (Of ByteString) IO r -> StreamingBody
-streamingBody src write flush = S.foldM_ writer flush return src
+streamingBody src write flush = void $ effects $ for src writer
   where
-    writer _ a = do
-      write (byteString a)
-      flush
+    writer a = do
+      lift (write (byteString a))
+      lift flush
 
 -- $flush
 --
@@ -70,7 +70,7 @@ streamingResponseF src status headers =
 
 -- | Stream 'Builder's into a 'StreamingBody'
 streamingBodyF :: Stream (Of (Flush Builder)) IO r -> StreamingBody
-streamingBodyF src write flush = S.foldM_ writer flush return src
+streamingBodyF src write flush = void $ effects $ for src writer
   where
-    writer _ (Chunk a) = write a
-    writer _ Flush     = flush
+    writer (Chunk a) = lift (write a)
+    writer Flush     = lift flush
