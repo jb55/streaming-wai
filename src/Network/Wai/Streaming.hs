@@ -2,6 +2,7 @@
 
 module Network.Wai.Streaming ( Flush(..)
                              -- * ByteStrings
+                             , streamingRequest
                              , streamingResponse
                              , streamingBody
 
@@ -13,15 +14,28 @@ module Network.Wai.Streaming ( Flush(..)
 
 import Streaming
 import Network.Wai
+import Control.Monad (unless)
 import Data.ByteString (ByteString)
 import Data.ByteString.Builder (byteString, Builder)
 import Network.HTTP.Types.Header
 import Network.HTTP.Types.Status
 import Streaming.Prelude as S
+import Data.ByteString as BS
 
-data Flush a = Chunk !a
+data Flush a = Chunk a
              | Flush
              deriving (Show, Functor)
+
+-- | Stream the 'Request' body
+streamingRequest :: MonadIO m => Request -> Stream (Of ByteString) m ()
+streamingRequest req = loop
+  where
+    go = liftIO (requestBody req)
+    loop = do
+      bs <- go
+      unless (BS.null bs) $ do
+        yield bs
+        loop
 
 
 -- | Stream strict 'ByteString's into a 'Response'
