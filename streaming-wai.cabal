@@ -23,7 +23,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Network.Wai.Streaming
-  build-depends: base >= 4.7 && < 5
+  build-depends: base >= 4.5 && < 5
                , http-types
                , wai
                , bytestring
